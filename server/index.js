@@ -1,11 +1,16 @@
 //require express
 const express = require("express");
+const cors = require('cors');
+
+
+
 //create express app
+
 const app = express();
 //middleware: intermediate functions that we want
 //to run in between the request and the response.
 //middleware: parsing JSON request body
-
+app.use(cors());
 //middleware: logging the request
 app.use((req, res, next) => {
   //Examples: req.method: get, post, put, delete, req.url: /api/users
@@ -44,7 +49,7 @@ app.get("/posts", (req, res) => {
   res.json(blogPosts);
 });
 app.post("/posts", (req, res) => {
-  const newPost = { id: Date.now(), ...req.body, comments: [] };
+  const newPost = {...req.body};
   blogPosts.push(newPost);
   //send
   res.status(201).json(newPost);
@@ -79,7 +84,7 @@ app.delete("/posts/:id", (req, res) => {
 });
 
 //start the server
-const PORT = 3000;
+const PORT = 3001;//react running on 3000
 app.listen(PORT, () => {
   console.log(`Server is running on port localhost:${PORT}.`);
 });
