@@ -7,6 +7,7 @@ function App() {
  //create state variable to store data for a new post
   const [newPost, setNewPost] = useState({id:0, title: "", content: "", comments: []});
   //use ueseEffect to use axios to fetch all blog posts on page load
+  const[editingPost, setEditingPost ] = useState(null);
   useEffect(() => {
   const fetchPosts = async () => {
     try {
@@ -19,13 +20,14 @@ function App() {
     fetchPosts();
   }, []); // only want effect to run when page loads the first time
   const handleDelete = async (postId) => {
-  try {
-await axios.delete(`${BASE_URL}/posts/${postId}`)
-setPosts(posts.filter(post => post.id !== postId));
-} catch (error) {
-  console.error("Error deleting post:", error);
-}
-}
+		try {
+			await axios.delete(`${BASE_URL}/posts/${postId}`);
+			// filter out the post to delete from the posts state array
+			setPosts(posts.filter((post) => post.id !== postId));
+		} catch (error) {
+			console.error('Error deleting post:', error);
+		}
+	};
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -41,20 +43,52 @@ try {
   console.error("Error adding post:", error);
 }
 }
+const handleEditPost = async (e) => {
+  try {
+    // send a put request with updated post data
+    await axios.put(`${BASE_URL}/posts/${editingPost.id}`, editingPost);
+    // update client side content
+    setPosts(posts.map((post) => (post.id === editingPost.id ? editingPost : post)));
+    // reset the editing post state to null
+    setEditingPost(null);
+  } catch (error) {
+    console.error("Error editing post", error);
+  }
+};
+
   return (
     <div>
       <h1>Blog Posts</h1>
       <ul>
-        {posts.map(post => (
-        <li key={post.id}>
-          <h2>{post.title}</h2>
-          <p>{post.content}</p>
-          <button onClick={() =>handleDelete(post.id)}>Delete Post</button>
-          </li>
-        ))}
-      </ul>
+				{posts.map((post) =>
+					editingPost == post.id ? (
+						<li key={post.id}>
+							<input type='text' placeholder={post.title} />
+							<textarea placeholder={post.content} />
+							<button onClick={() => handleDelete(post.id)}>
+								Delete
+							</button>
+							<button onClick={() => setEditingPost(post.id)}>
+								Edit
+							</button>
+						</li>
+					) : (
+						<li key={post.id}>
+							<h2>{post.title}</h2>
+							<p>{post.content}</p>
+							<button onClick={() => handleDelete(post.id)}>
+								Delete
+							</button>
+							<button onClick={() => setEditingPost(post.id)}>
+								Edit
+							</button>
+						</li>
+					)
+				)}
+			</ul>
       {/* {posts ? JSON.stringify(posts, null, 2) : "Loading..."} */}
        <form onSubmit={handleSubmit}>
+        <h3>Create new posts</h3>
         <input
         type='text'
         placeholder='Title'
@@ -67,6 +101,7 @@ try {
        onChange={(e) => setNewPost({...newPost, content: e.target.value})}
        />
        <button type='submit'>Add Post</button>
+       
        </form>
     </div>
   );
